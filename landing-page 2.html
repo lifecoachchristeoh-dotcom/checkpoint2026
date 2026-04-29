@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三哥 · 决策校准系统</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --black:#060606;--deep:#0d0d0d;--card:#0a0a0a;
+  --gold:#C9A84C;--gdim:#6B5420;--gold2:#8a6f2e;
+  --white:#EDE8DF;--muted:#666;--dim:#333;
+  --border:#1e1e1e;--border-lit:#2e2e2e;
+  --green:#7A9E7E;--gdark:#3D6642;
+  --purple:#8B7BAB;--pdark:#4A3D6A;
+  --red:#c0392b;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:'Noto Serif SC',serif;overflow-x:hidden;}
+
+/* ─── SECTION WRAPPER ─── */
+.section{width:100%;display:flex;flex-direction:column;align-items:center;padding:64px 20px;}
+.inner{width:100%;max-width:560px;}
+
+/* ─── HERO ─── */
+#hero{background:var(--black);padding:72px 20px 60px;position:relative;overflow:hidden;}
+#hero::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gdim),transparent);}
+.hero-eyebrow{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:6px;color:var(--gdim);text-transform:uppercase;text-align:center;margin-bottom:20px;}
+.hero-title{font-size:clamp(22px,5vw,32px);font-weight:700;text-align:center;line-height:1.5;letter-spacing:1px;margin-bottom:14px;}
+.hero-title span{color:var(--gold);}
+.hero-sub{font-size:13px;color:var(--muted);text-align:center;line-height:1.9;margin-bottom:36px;max-width:440px;margin-left:auto;margin-right:auto;}
+.hero-cta{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.btn-primary{display:inline-block;padding:15px 40px;background:var(--gold);color:#060606;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;border:none;text-decoration:none;transition:all 0.2s;}
+.btn-primary:hover{background:var(--white);letter-spacing:4px;}
+.hero-note{font-family:'Space Mono',monospace;font-size:9px;color:#2a2a2a;letter-spacing:2px;}
+
+/* ─── AUTHORITY ─── */
+#authority{background:var(--deep);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.auth-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);margin-bottom:28px;}
+.auth-stat{background:var(--card);padding:20px 16px;text-align:center;}
+.auth-num{font-family:'Space Mono',monospace;font-size:22px;color:var(--gold);font-weight:700;margin-bottom:4px;}
+.auth-label{font-size:10px;color:var(--muted);line-height:1.5;}
+.auth-name{font-size:18px;font-weight:700;margin-bottom:4px;text-align:center;}
+.auth-role{font-family:'Space Mono',monospace;font-size:9px;color:var(--gdim);letter-spacing:3px;text-align:center;margin-bottom:20px;}
+.auth-tagline{font-size:13px;color:var(--muted);text-align:center;line-height:1.9;border-left:2px solid var(--gdim);padding-left:16px;font-style:italic;}
+
+/* ─── PRESELL ─── */
+#presell{background:var(--black);}
+.presell-box{border:1px solid var(--border);padding:24px;background:var(--deep);}
+.presell-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:4px;color:var(--gdim);text-transform:uppercase;margin-bottom:14px;}
+.presell-text{font-size:13px;color:#888;line-height:2;}
+.presell-text strong{color:var(--white);}
+.presell-hint{font-family:'Space Mono',monospace;font-size:9px;color:#2a2a2a;letter-spacing:2px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+
+/* ─── QUIZ ─── */
+#quiz{background:var(--black);padding-top:0;}
+.quiz-instruction{font-family:'Space Mono',monospace;font-size:9px;color:#333;letter-spacing:3px;text-align:center;margin-bottom:20px;text-transform:uppercase;}
+.progress-wrap{width:100%;max-width:560px;margin-bottom:20px;}
+.progress-meta{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:9px;color:#2a2a2a;margin-bottom:6px;}
+.progress-bar{height:1px;background:#181818;}
+.progress-fill{height:100%;background:var(--gold);transition:width 0.5s ease;}
+.q-card{width:100%;max-width:560px;background:var(--deep);border:1px solid var(--border);padding:24px;display:none;}
+.q-card.active{display:block;animation:fadeUp 0.3s ease;}
+.q-num{font-family:'Space Mono',monospace;font-size:8px;color:var(--gdim);letter-spacing:4px;margin-bottom:12px;text-transform:uppercase;}
+.q-text{font-size:14px;font-weight:600;line-height:1.8;margin-bottom:18px;}
+.options{display:flex;flex-direction:column;gap:8px;}
+.opt{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border:1px solid #181818;background:#080808;cursor:pointer;transition:all 0.15s;}
+.opt:hover{border-color:var(--gdim);background:#0d0d06;}
+.opt.sel-a{border-color:var(--gold);background:#0e0c04;}
+.opt.sel-b{border-color:var(--green);background:#050d06;}
+.opt.sel-c{border-color:var(--purple);background:#07050e;}
+.opt-letter{font-family:'Space Mono',monospace;font-size:8px;color:#2a2a2a;flex-shrink:0;margin-top:3px;width:12px;}
+.opt.sel-a .opt-letter{color:var(--gold);}
+.opt.sel-b .opt-letter{color:var(--green);}
+.opt.sel-c .opt-letter{color:var(--purple);}
+.opt-text{font-size:12px;color:#888;line-height:1.7;}
+.opt:hover .opt-text,.opt.sel-a .opt-text,.opt.sel-b .opt-text,.opt.sel-c .opt-text{color:var(--white);}
+
+/* ─── RESULT ─── */
+#result{display:none;background:var(--black);padding:48px 20px;}
+.result-wrap{width:100%;max-width:560px;}
+
+.result-header{padding:28px 24px;border:1px solid var(--border);background:var(--deep);margin-bottom:1px;}
+.result-eyebrow{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:4px;color:#333;text-transform:uppercase;text-align:center;margin-bottom:14px;}
+.result-tier{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;text-align:center;margin-bottom:4px;}
+.result-name{font-size:13px;font-weight:600;text-align:center;margin-bottom:5px;letter-spacing:1px;}
+.result-time{font-family:'Space Mono',monospace;font-size:9px;text-align:center;margin-bottom:18px;letter-spacing:1px;}
+.result-divider{width:32px;height:1px;background:var(--border-lit);margin:0 auto 18px;}
+.result-desc{font-size:12px;color:#999;line-height:2;white-space:pre-line;margin-bottom:16px;}
+.result-quote{border-left:2px solid;padding:12px 14px;font-size:11px;color:#777;line-height:1.9;font-style:italic;background:#080808;}
+
+.risk-block{padding:20px 24px;border:1px solid var(--border);border-top:none;background:#0a0806;margin-bottom:1px;}
+.risk-title{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:3px;color:#3a2a20;text-transform:uppercase;margin-bottom:12px;}
+.risk-list{display:flex;flex-direction:column;gap:8px;}
+.risk-item{display:flex;align-items:flex-start;gap:10px;font-size:12px;color:#666;line-height:1.7;}
+.risk-dot{width:4px;height:4px;background:var(--red);border-radius:50%;flex-shrink:0;margin-top:7px;}
+.risk-closing{font-size:11px;color:#3a2a20;margin-top:14px;padding-top:12px;border-top:1px solid #1a1208;font-style:italic;}
+
+.calib-block{padding:20px 24px;border:1px solid var(--border);border-top:none;background:#09090a;margin-bottom:1px;}
+.calib-title{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:3px;color:#2a2a33;text-transform:uppercase;margin-bottom:14px;}
+.calib-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+.calib-row:last-of-type{margin-bottom:0;}
+.cdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.cdot-88{background:var(--gold);}
+.cdot-420{background:var(--green);}
+.cdot-888{background:var(--purple);}
+.calib-text{font-size:11px;color:#444;line-height:1.7;}
+.calib-text strong{color:#666;}
+.calib-closing{font-size:11px;color:#333;margin-top:14px;padding-top:12px;border-top:1px solid #141414;font-style:italic;}
+
+.spread-mini{display:flex;justify-content:center;gap:4px;margin:16px 0 0;flex-wrap:wrap;}
+.mini-slot{width:28px;height:42px;border-radius:2px;border:1px solid #181818;background:#080808;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:7px;color:#1a1a1a;}
+.mini-slot.lit-88{border-color:var(--gold);color:var(--gold);background:#0e0c04;}
+.mini-slot.lit-420{border-color:var(--green);color:var(--green);background:#050d06;}
+.mini-slot.lit-888{border-color:var(--purple);color:var(--purple);background:#07050e;}
+
+/* Book button */
+.book-btn{width:100%;padding:16px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:none;transition:all 0.2s;margin-bottom:1px;}
+.book-btn-88{background:var(--gold);color:#060606;}
+.book-btn-420{background:var(--green);color:#060606;}
+.book-btn-888{background:var(--purple);color:#f0eeff;}
+.book-btn:hover{opacity:0.85;letter-spacing:3px;}
+
+/* Color theming */
+.t88 .result-tier,.t88 .result-name,.t88 .result-time{color:var(--gold);}
+.t88 .result-quote{border-color:var(--gdim);}
+.t88 .result-header{border-color:var(--gdim)!important;}
+.t420 .result-tier,.t420 .result-name,.t420 .result-time{color:var(--green);}
+.t420 .result-quote{border-color:var(--gdark);}
+.t420 .result-header{border-color:var(--gdark)!important;}
+.t888 .result-tier,.t888 .result-name,.t888 .result-time{color:var(--purple);}
+.t888 .result-quote{border-color:var(--pdark);}
+.t888 .result-header{border-color:var(--pdark)!important;}
+
+/* ─── FILTER ─── */
+#filter{background:var(--deep);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);}
+.filter-col{background:var(--card);padding:20px 18px;}
+.filter-title{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;}
+.filter-col-yes .filter-title{color:var(--gdim);}
+.filter-col-no .filter-title{color:#3a2020;}
+.filter-list{display:flex;flex-direction:column;gap:8px;}
+.filter-item{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#555;line-height:1.6;}
+.filter-mark{flex-shrink:0;margin-top:2px;font-size:10px;}
+.filter-col-yes .filter-mark{color:var(--gdim);}
+.filter-col-no .filter-mark{color:#5a2020;}
+
+/* ─── CONFIRM OVERLAY ─── */
+#confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:200;align-items:center;justify-content:center;padding:24px;}
+#confirm-overlay.show{display:flex;animation:fadeUp 0.25s ease;}
+.confirm-box{width:100%;max-width:420px;background:#0d0d0d;border:1px solid var(--border-lit);padding:32px 28px;}
+.confirm-title{font-size:15px;font-weight:700;margin-bottom:10px;line-height:1.6;}
+.confirm-sub{font-size:12px;color:#555;line-height:1.9;margin-bottom:24px;}
+.confirm-yes{width:100%;padding:14px;background:var(--gdim);color:var(--white);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;border:none;cursor:pointer;margin-bottom:8px;transition:background 0.2s;}
+.confirm-yes:hover{background:var(--gold);color:#060606;}
+.confirm-no{width:100%;padding:12px;background:transparent;border:1px solid #222;color:#333;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.15s;}
+.confirm-no:hover{border-color:#333;color:#555;}
+
+/* ─── BOOKING ─── */
+#booking-form{display:none;width:100%;max-width:560px;background:var(--deep);border:1px solid var(--border);border-top:none;padding:24px;margin-bottom:1px;animation:fadeUp 0.3s ease;}
+#booking-form.open{display:block;}
+.form-eyebrow{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:4px;color:var(--gdim);text-transform:uppercase;margin-bottom:6px;text-align:center;}
+.form-note-top{font-size:11px;color:#333;text-align:center;margin-bottom:20px;font-style:italic;}
+.field-group{margin-bottom:12px;}
+.field-label{font-family:'Space Mono',monospace;font-size:8px;color:#444;letter-spacing:2px;margin-bottom:5px;display:block;text-transform:uppercase;}
+.field-input{width:100%;background:#080808;border:1px solid #1a1a1a;color:var(--white);font-family:'Noto Serif SC',serif;font-size:13px;padding:11px 13px;outline:none;transition:border-color 0.15s;-webkit-appearance:none;border-radius:0;}
+.field-input:focus{border-color:var(--gdim);}
+.field-input::placeholder{color:#252525;}
+.submit-btn{width:100%;padding:13px;background:var(--gdim);color:var(--white);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;border:none;cursor:pointer;margin-top:4px;transition:background 0.2s;}
+.submit-btn:hover{background:var(--gold);color:#060606;}
+.form-note-bot{font-size:9px;color:#252525;text-align:center;margin-top:10px;font-family:'Space Mono',monospace;line-height:1.7;}
+
+/* ─── UPSELL ─── */
+#upsell-block{display:none;width:100%;max-width:560px;border:1px solid var(--pdark);background:#07050e;padding:20px 24px;margin-bottom:1px;animation:fadeUp 0.4s ease;}
+.upsell-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--pdark);text-transform:uppercase;margin-bottom:10px;}
+.upsell-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:6px;}
+.upsell-price{font-family:'Space Mono',monospace;font-size:18px;color:var(--purple);margin-bottom:8px;}
+.upsell-desc{font-size:11px;color:#555;line-height:1.8;margin-bottom:14px;}
+.upsell-btn{width:100%;padding:12px;background:transparent;border:1px solid var(--pdark);color:var(--purple);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.upsell-btn:hover{background:var(--pdark);color:var(--white);}
+
+/* ─── THANKYOU ─── */
+#thankyou{display:none;width:100%;max-width:560px;background:#080806;border:1px solid var(--gdim);padding:32px 24px;text-align:center;animation:fadeUp 0.4s ease;margin-bottom:1px;}
+.ty-mark{font-size:22px;margin-bottom:12px;}
+.ty-title{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px;}
+.ty-text{font-size:11px;color:#555;line-height:2;}
+
+.restart-btn{width:100%;max-width:560px;padding:11px;background:transparent;border:1px solid #181818;color:#2a2a2a;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;margin-top:8px;}
+.restart-btn:hover{border-color:var(--gdim);color:var(--gdim);}
+
+/* ─── FOOTER ─── */
+.page-footer{padding:24px 20px;text-align:center;border-top:1px solid var(--border);}
+.footer-brand{font-family:'Space Mono',monospace;font-size:8px;color:#1a1a1a;letter-spacing:4px;margin-bottom:6px;}
+.footer-tag{font-size:11px;color:#2a2a2a;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- ① HERO -->
+<section id="hero">
+  <div class="hero-eyebrow">三哥 · 决策策略顾问</div>
+  <h1 class="hero-title">你卡住，不是因为不努力<br><span>是因为一直用错方法努力</span></h1>
+  <p class="hero-sub">用5个问题，找出你卡在心态 / 行动 / 系统哪一层</p>
+  <div class="hero-cta">
+    <a class="btn-primary" href="#quiz" onclick="smoothTo('quiz')">开始校准 →</a>
+    <div class="hero-note">只需60秒 · 无需准备 · 结果即诊断</div>
+  </div>
+</section>
+
+<!-- ② AUTHORITY -->
+<section id="authority" class="section">
+  <div class="inner">
+    <div class="auth-grid">
+      <div class="auth-stat"><div class="auth-num">30</div><div class="auth-label">年诊断经验</div></div>
+      <div class="auth-stat"><div class="auth-num">10K+</div><div class="auth-label">个案校准</div></div>
+      <div class="auth-stat"><div class="auth-num">3</div><div class="auth-label">层级系统</div></div>
+    </div>
+    <div class="auth-name">三哥</div>
+    <div class="auth-role">Decision Strategy Consultant</div>
+    <div class="auth-tagline">我不安慰你，我校准你。<br>感觉好不好，不是我的工作。你的决策有没有变清晰，才是。</div>
+  </div>
+</section>
+
+<!-- ③ PRESELL -->
+<section id="presell" class="section" style="padding-top:0;padding-bottom:40px;">
+  <div class="inner">
+    <div class="presell-box">
+      <div class="presell-label">进入问卷前</div>
+      <p class="presell-text"><strong>这不是测试，是决策层级筛选。</strong><br><br>结果会直接对应你适合的处理深度——心态层、行动层、还是系统层。每一层的处理方式不同，深度不同，结果不同。</p>
+      <div class="presell-hint">请用直觉选择 · 不要分析</div>
+    </div>
+  </div>
+</section>
+
+<!-- ④ QUIZ -->
+<section id="quiz" style="display:flex;flex-direction:column;align-items:center;padding:0 20px 48px;">
+  <div class="quiz-instruction">请用直觉选择，不要分析</div>
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="prog-text">问题 1 / 5</span>
+      <span id="prog-pct">20%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:20%"></div></div>
+  </div>
+
+  <div id="questions" style="width:100%;max-width:560px;">
+    <div class="q-card active" data-q="1">
+      <div class="q-num">Q 01 · 问题存在多久了？</div>
+      <div class="q-text">你今天想解决的这件事，它在你生活里出现多久了？</div>
+      <div class="options">
+        <div class="opt" data-score="a" onclick="sel(this,1)"><span class="opt-letter">A</span><span class="opt-text">最近一两个月才出现，或是一个新的决策需要想清楚</span></div>
+        <div class="opt" data-score="b" onclick="sel(this,1)"><span class="opt-letter">B</span><span class="opt-text">超过半年了，我试过一些方法但都没有真正解决</span></div>
+        <div class="opt" data-score="c" onclick="sel(this,1)"><span class="opt-letter">C</span><span class="opt-text">不止一年，甚至感觉它一直都在，换了环境还是出现</span></div>
+      </div>
+    </div>
+    <div class="q-card" data-q="2">
+      <div class="q-num">Q 02 · 问题的层次</div>
+      <div class="q-text">你今天最想解决的，比较接近哪一种？</div>
+      <div class="options">
+        <div class="opt" data-score="a" onclick="sel(this,2)"><span class="opt-letter">A</span><span class="opt-text">我知道方向，但我最近脑子乱、情绪状态不对、心态卡住了</span></div>
+        <div class="opt" data-score="b" onclick="sel(this,2)"><span class="opt-letter">B</span><span class="opt-text">我有几个选项，我需要有人帮我整理清楚优先顺序和行动步骤</span></div>
+        <div class="opt" data-score="c" onclick="sel(this,2)"><span class="opt-letter">C</span><span class="opt-text">我不确定自己走的方向对不对，整个生意模式或身份定位都需要重新检视</span></div>
+      </div>
+    </div>
+    <div class="q-card" data-q="3">
+      <div class="q-num">Q 03 · 代价评估</div>
+      <div class="q-text">如果这件事三个月后还没有解决，你的生意或生活会怎样？</div>
+      <div class="options">
+        <div class="opt" data-score="a" onclick="sel(this,3)"><span class="opt-letter">A</span><span class="opt-text">会有点影响，但不至于出大问题，只是我会继续不舒服</span></div>
+        <div class="opt" data-score="b" onclick="sel(this,3)"><span class="opt-letter">B</span><span class="opt-text">会有明显的收入或机会损失，几个重要的事情会卡死</span></div>
+        <div class="opt" data-score="c" onclick="sel(this,3)"><span class="opt-letter">C</span><span class="opt-text">可能会出现比较严重的后果——财务、团队、或整个方向都可能崩</span></div>
+      </div>
+    </div>
+    <div class="q-card" data-q="4">
+      <div class="q-num">Q 04 · 过去的尝试</div>
+      <div class="q-text">你之前试过什么方法来解决这件事？</div>
+      <div class="options">
+        <div class="opt" data-score="a" onclick="sel(this,4)"><span class="opt-letter">A</span><span class="opt-text">还没有真正认真处理过，只是感觉到卡住了</span></div>
+        <div class="opt" data-score="b" onclick="sel(this,4)"><span class="opt-letter">B</span><span class="opt-text">试过几个方法，有些短期有效，但问题还是一直回来</span></div>
+        <div class="opt" data-score="c" onclick="sel(this,4)"><span class="opt-letter">C</span><span class="opt-text">试了很多，包括找人谈过、读书、上课，但根本原因一直没找到</span></div>
+      </div>
+    </div>
+    <div class="q-card" data-q="5">
+      <div class="q-num">Q 05 · 你今天来的期待</div>
+      <div class="q-text">你最希望离开的时候带走什么？</div>
+      <div class="options">
+        <div class="opt" data-score="a" onclick="sel(this,5)"><span class="opt-letter">A</span><span class="opt-text">看清楚自己现在卡在哪个心态，知道问题的名字是什么</span></div>
+        <div class="opt" data-score="b" onclick="sel(this,5)"><span class="opt-letter">B</span><span class="opt-text">一份清单——知道接下来要做什么、不做什么、先做什么</span></div>
+        <div class="opt" data-score="c" onclick="sel(this,5)"><span class="opt-letter">C</span><span class="opt-text">对自己的整个方向和身份有一个重新的清晰感，以及一个可以走的路</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑤ RESULT -->
+<section id="result">
+  <div style="display:flex;flex-direction:column;align-items:center;padding:0 20px 48px;">
+    <div class="result-wrap">
+
+      <div class="result-header" id="result-header">
+        <div class="result-eyebrow">你的决策层级</div>
+        <div class="result-tier" id="res-tier"></div>
+        <div class="result-name" id="res-name"></div>
+        <div class="result-time" id="res-time"></div>
+        <div class="result-divider"></div>
+        <div class="result-desc" id="res-desc"></div>
+        <div class="result-quote" id="res-quote"></div>
+        <div class="spread-mini" id="res-spread"></div>
+      </div>
+
+      <!-- Risk block -->
+      <div class="risk-block">
+        <div class="risk-title">如果你什么都不改变</div>
+        <div class="risk-list">
+          <div class="risk-item"><div class="risk-dot"></div>卡点会维持</div>
+          <div class="risk-item"><div class="risk-dot"></div>决策会重复</div>
+          <div class="risk-item"><div class="risk-dot"></div>结果不会改变</div>
+        </div>
+        <div class="risk-closing">这不是可能，是模式。你现在的问题，不是你不够努力——是你一直在用错误的决策结构在努力。</div>
+      </div>
+
+      <!-- Calibration block -->
+      <div class="calib-block">
+        <div class="calib-title">校准说明</div>
+        <div class="calib-row"><div class="cdot cdot-88"></div><div class="calib-text"><strong>RM88</strong> → 解决表层心态卡点，找到问题的名字</div></div>
+        <div class="calib-row"><div class="cdot cdot-420"></div><div class="calib-text"><strong>RM420</strong> → 建立清晰执行结构，开始有路走</div></div>
+        <div class="calib-row"><div class="cdot cdot-888"></div><div class="calib-text"><strong>RM888</strong> → 身份与收入结构发生变化，这是重建，不是调整</div></div>
+        <div class="calib-closing">你现在所在的层级，会决定你接下来90天的结果。</div>
+      </div>
+
+      <!-- Book button -->
+      <button class="book-btn" id="book-btn" onclick="showConfirm()"></button>
+
+    </div>
+  </div>
+</section>
+
+<!-- ⑥ FILTER -->
+<section id="filter" class="section" style="display:none;">
+  <div class="inner">
+    <div class="filter-grid">
+      <div class="filter-col filter-col-yes">
+        <div class="filter-title">适合你，如果</div>
+        <div class="filter-list">
+          <div class="filter-item"><span class="filter-mark">✓</span>卡住超过3个月</div>
+          <div class="filter-item"><span class="filter-mark">✓</span>有行动但没有结果</div>
+          <div class="filter-item"><span class="filter-mark">✓</span>知道问题不只是表面</div>
+          <div class="filter-item"><span class="filter-mark">✓</span>愿意面对不舒服的真相</div>
+        </div>
+      </div>
+      <div class="filter-col filter-col-no">
+        <div class="filter-title">不适合你，如果</div>
+        <div class="filter-list">
+          <div class="filter-item"><span class="filter-mark">✗</span>只想被安慰</div>
+          <div class="filter-item"><span class="filter-mark">✗</span>不愿意行动</div>
+          <div class="filter-item"><span class="filter-mark">✗</span>想别人替你做决定</div>
+          <div class="filter-item"><span class="filter-mark">✗</span>还没准备好负责</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑦ CONFIRM OVERLAY -->
+<div id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title">这个咨询不会给你安慰，只会给你结构。</div>
+    <div class="confirm-sub">你现在的问题，不是你不够努力——是你一直在用错误的决策结构在努力。<br><br>你确定要面对真正的问题吗？</div>
+    <button class="confirm-yes" onclick="confirmYes()">确定，我要结果 →</button>
+    <button class="confirm-no" onclick="confirmNo()">我再想想</button>
+  </div>
+</div>
+
+<!-- ⑧ BOOKING FORM -->
+<div style="display:flex;flex-direction:column;align-items:center;padding:0 20px;">
+  <div id="booking-form">
+    <div class="form-eyebrow">预约信息</div>
+    <div class="form-note-top">提交后，我会亲自判断你是否适合这个层级。不是每个人都会被接。</div>
+    <div class="field-group">
+      <label class="field-label">你的名字</label>
+      <input class="field-input" id="f-name" type="text" placeholder="请输入你的名字"/>
+    </div>
+    <div class="field-group">
+      <label class="field-label">手机号码</label>
+      <input class="field-input" id="f-phone" type="tel" placeholder="请输入手机号码"/>
+    </div>
+    <div class="field-group">
+      <label class="field-label">电子邮箱（选填）</label>
+      <input class="field-input" id="f-email" type="email" placeholder="Email"/>
+    </div>
+    <button class="submit-btn" onclick="submitBooking()">确认预约 →</button>
+    <div class="form-note-bot">提交即表示你准备好面对真正的问题</div>
+  </div>
+
+  <!-- UPSELL (RM888 only) -->
+  <div id="upsell-block">
+    <div class="upsell-label">加入 · 30天行动校准系统</div>
+    <div class="upsell-title">每天不是提醒你做事，而是帮你建立可执行的人生结构</div>
+    <div class="upsell-price">RM 499 / 月</div>
+    <div class="upsell-desc">在深度校准之后，用30天把你的新决策系统真正落地。每日校准，不是励志，是结构。</div>
+    <button class="upsell-btn" onclick="joinUpsell()">加入30天执行系统 →</button>
+  </div>
+
+  <div id="thankyou">
+    <div class="ty-mark">✓</div>
+    <div class="ty-title">收到了。</div>
+    <div class="ty-text">三哥会在24小时内亲自联系你，确认你是否适合这个层级。<br><br>在那之前，你不需要做任何准备。</div>
+  </div>
+
+  <button class="restart-btn" id="restart-btn" style="display:none" onclick="restart()">↩ 重新作答</button>
+</div>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <div class="footer-brand">三哥 · DECISION STRATEGY CONSULTANT · MALAYSIA</div>
+  <div class="footer-tag">我不安慰你，我校准你</div>
+</footer>
+
+<script>
+// ── CONFIG ──
+const WA_NUMBER = '601137194134';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyMm3swMNajV15-GO2OqgNBi-63fny6lWQS28YbhP1B53wnpi3fr2LfHQghlOxzD6EWpQ/exec';
+
+const answers={};
+let currentTier='a';
+
+const R={
+  a:{
+    tier:'RM 88',name:'决策卡点扫描',time:'10–15分钟 · 找出你真正卡住的点',
+    cls:'t88',btnCls:'book-btn-88',btn:'现在校准我的卡点 →',
+    desc:'你现在的卡点主要在心态层。方向不是问题，是你现在的状态让你动不了或想不清楚。\n\n一张牌，10到15分钟，找出那个具体的心态陷阱的名字。知道了名字，你才能处理它。',
+    quote:'「你不是方向错，你是状态卡住了。先校准心态，行动自然会跟上。」',
+    slots:['lit-88','','','','','','','','',''],
+    upsell:false
+  },
+  b:{
+    tier:'RM 420',name:'决策系统扫描 Session',time:'60分钟 · 帮你理清下一步行动结构',
+    cls:'t420',btnCls:'book-btn-420',btn:'帮我理清下一步 →',
+    desc:'你现在的卡点跨越了多个层面——行动乱、思维有盲点、选项太多不知道怎么选。\n\n60分钟，5张牌，全面扫描你当前的挑战面，整理出优先顺序和清晰的行动清单。',
+    quote:'「你不是不知道怎么做，你是没有一个清晰的结构帮你排好顺序。我来帮你建这个结构。」',
+    slots:['lit-420','lit-420','lit-420','lit-420','lit-420','','','','',''],
+    upsell:false
+  },
+  c:{
+    tier:'RM 888',name:'90天深度决策校准',time:'不是固定时间 · 我们做到问题被看清为止',
+    cls:'t888',btnCls:'book-btn-888',btn:'我要重建我的决策系统 →',
+    desc:'你面对的不只是策略问题，是一个更深层的身份和系统问题。你需要重新检视你是谁、你在做什么、以及你如何把自己变成一个可以复制的资产。\n\n10张牌，从根部开始查。这不是咨询，这是重建。',
+    quote:'「调整策略救不了一个方向错误的生意。你需要的不是更多行动，是更清晰的根基。」',
+    slots:['lit-888','lit-888','lit-888','lit-888','lit-888','lit-888','lit-888','lit-888','lit-888','lit-888'],
+    upsell:true
+  }
+};
+
+function smoothTo(id){
+  setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}),10);
+}
+
+function sel(el,q){
+  el.closest('.q-card').querySelectorAll('.opt').forEach(o=>o.classList.remove('sel-a','sel-b','sel-c'));
+  const s=el.dataset.score;
+  el.classList.add('sel-'+s);
+  answers[q]=s;
+  setTimeout(()=>{if(q<5)goTo(q+1);else showResult();},320);
+}
+
+function goTo(n){
+  document.querySelectorAll('.q-card').forEach(c=>c.classList.remove('active'));
+  document.querySelector('[data-q="'+n+'"]').classList.add('active');
+  const pct=Math.round(n/5*100);
+  document.getElementById('prog-text').textContent='问题 '+n+' / 5';
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('prog-fill').style.width=pct+'%';
+}
+
+function showResult(){
+  const cnt={a:0,b:0,c:0};
+  Object.values(answers).forEach(v=>cnt[v]++);
+  let w='a';
+  if(cnt.c>=2)w='c';
+  else if(cnt.b>=2)w='b';
+  if(answers[3]==='c'||answers[5]==='c')w='c';
+  else if((answers[3]==='b'||answers[5]==='b')&&w==='a')w='b';
+
+  currentTier=w;
+  const r=R[w];
+
+  document.getElementById('result-header').className='result-header '+r.cls;
+  document.getElementById('res-tier').textContent=r.tier;
+  document.getElementById('res-name').textContent=r.name;
+  document.getElementById('res-time').textContent=r.time;
+  document.getElementById('res-desc').textContent=r.desc;
+  document.getElementById('res-quote').textContent=r.quote;
+
+  const spreadEl=document.getElementById('res-spread');
+  spreadEl.innerHTML='';
+  ['01','02','03','04','05','06','07','08','09','10'].forEach((lbl,i)=>{
+    const d=document.createElement('div');
+    d.className='mini-slot '+(r.slots[i]||'');
+    d.textContent=lbl;
+    spreadEl.appendChild(d);
+  });
+
+  const btn=document.getElementById('book-btn');
+  btn.className='book-btn '+r.btnCls;
+  btn.textContent=r.btn;
+
+  document.getElementById('prog-text').textContent='完成';
+  document.getElementById('prog-pct').textContent='100%';
+  document.getElementById('prog-fill').style.width='100%';
+  document.getElementById('questions').style.display='none';
+  document.getElementById('result').style.display='block';
+  document.getElementById('filter').style.display='flex';
+  document.getElementById('restart-btn').style.display='block';
+
+  setTimeout(()=>document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+function showConfirm(){
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+function confirmYes(){
+  document.getElementById('confirm-overlay').classList.remove('show');
+  const form=document.getElementById('booking-form');
+  form.classList.add('open');
+  document.getElementById('book-btn').style.display='none';
+  setTimeout(()=>form.scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+function confirmNo(){
+  document.getElementById('confirm-overlay').classList.remove('show');
+}
+
+function submitBooking(){
+  const name=document.getElementById('f-name').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  if(!name||!phone){alert('请填写名字和手机号码');return;}
+
+  const r=R[currentTier];
+
+  // 1. 发送到Google Sheets
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name:name, phone:phone, email:email, tier:r.tier+' '+r.name})
+  }).catch(()=>{});
+
+  // 2. WhatsApp直连
+  const msg=encodeURIComponent('你好三哥，\n名字：'+name+'\n电话：'+phone+(email?'\nEmail：'+email:'')+'\n层级：'+r.tier+' '+r.name);
+  window.open('https://wa.me/'+WA_NUMBER+'?text='+msg,'_blank');
+
+  document.getElementById('booking-form').style.display='none';
+
+  // Show upsell for RM888 only
+  if(r.upsell){
+    document.getElementById('upsell-block').style.display='block';
+  }
+
+  document.getElementById('thankyou').style.display='block';
+  document.getElementById('thankyou').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function joinUpsell(){
+  const r=R[currentTier];
+  const msg=encodeURIComponent('你好三哥，我想加入30天行动校准系统 RM499。\n层级：'+r.tier);
+  window.open('https://wa.me/'+WA_NUMBER+'?text='+msg,'_blank');
+}
+
+function restart(){
+  Object.keys(answers).forEach(k=>delete answers[k]);
+  document.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel-a','sel-b','sel-c'));
+  document.getElementById('result').style.display='none';
+  document.getElementById('filter').style.display='none';
+  document.getElementById('booking-form').classList.remove('open');
+  document.getElementById('booking-form').style.display='';
+  document.getElementById('upsell-block').style.display='none';
+  document.getElementById('thankyou').style.display='none';
+  document.getElementById('restart-btn').style.display='none';
+  document.getElementById('book-btn').style.display='block';
+  document.getElementById('questions').style.display='block';
+  ['f-name','f-phone','f-email'].forEach(id=>document.getElementById(id).value='');
+  goTo(1);
+  smoothTo('quiz');
+}
+</script>
+</body>
+</html>
